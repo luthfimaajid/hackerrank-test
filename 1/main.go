@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strconv"
 )
 
@@ -38,8 +41,13 @@ func getTotalGoal(isTeam1 bool, year int, team string) (int, error) {
 	}
 
 	for i := 1; hasNextPage; i++ {
-		urlA := fmt.Sprintf("%s?year=%d&%s=%s&page=%d", API, year, teamParam, team, i)
-		resp, err := http.Get(urlA)
+		params := url.Values{}
+		params.Set("year", fmt.Sprintf("%d", year))
+		params.Set(teamParam, team)
+		params.Set("page", fmt.Sprintf("%d", i))
+		url := "https://jsonmock.hackerrank.com/api/football_matches?" + params.Encode()
+
+		resp, err := http.Get(url)
 		if err != nil {
 			return 0, err
 		}
@@ -54,6 +62,10 @@ func getTotalGoal(isTeam1 bool, year int, team string) (int, error) {
 		err = json.Unmarshal(body, &response)
 		if err != nil {
 			panic(err)
+		}
+
+		if response.Total == 0 {
+			break
 		}
 
 		for _, d := range response.Data {
@@ -108,16 +120,17 @@ func solution(year int, team string) (int, error) {
 }
 
 func main() {
-	var year int
-	var team string
+	scanner := bufio.NewScanner(os.Stdin)
 
-	fmt.Scanln(&year)
-	fmt.Scanln(&team)
+	scanner.Scan()
+	year, _ := strconv.Atoi(scanner.Text())
+
+	scanner.Scan()
+	team := scanner.Text()
 
 	result, err := solution(year, team)
 	if err != nil {
 		panic(err)
 	}
-
 	fmt.Println(result)
 }
