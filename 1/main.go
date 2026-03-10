@@ -31,12 +31,13 @@ type ResponseData struct {
 func getTotalGoal(isTeam1 bool, year int, team string) (int, error) {
 	totalGoal := 0
 	hasNextPage := true
+
 	teamParam := "team2"
 	if isTeam1 {
 		teamParam = "team1"
 	}
 
-	for i := 1; true; i++ {
+	for i := 1; hasNextPage; i++ {
 		urlA := fmt.Sprintf("%s?year=%d&%s=%s&page=%d", API, year, teamParam, team, i)
 		resp, err := http.Get(urlA)
 		if err != nil {
@@ -70,13 +71,7 @@ func getTotalGoal(isTeam1 bool, year int, team string) (int, error) {
 			totalGoal += g
 		}
 
-		if response.Page == response.TotalPages {
-			hasNextPage = false
-		}
-
-		if !hasNextPage {
-			break
-		}
+		hasNextPage = !(response.Page == response.TotalPages)
 	}
 
 	return totalGoal, nil
